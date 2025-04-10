@@ -6,6 +6,7 @@ from PIL import Image
 import shutil
 import os
 import fitz  # PyMuPDF
+from fastapi.responses import FileResponse
 
 app = FastAPI()
 
@@ -17,16 +18,18 @@ app.add_middleware(
 )
 
 @app.post("/merge")
-async def merge_pdfs(files: list[UploadFile]):
-    merger = PdfMerger()
+async def merge(files: List[UploadFile] = File(...)):
+    merged = PdfWriter()
     for file in files:
-        with open(file.filename, "wb") as f:
-            f.write(await file.read())
-        merger.append(file.filename)
-    output = "merged.pdf"
-    merger.write(output)
-    merger.close()
-    return {"filename": output}
+        reader = PdfReader(file.file)
+        for page in reader.pages:
+            merged.add_page(page)
+
+    output_path = "merged_output.pdf"
+    with open(output_path, "wb") as f:
+        merged.write(f)
+
+    return FileResponse(output_path, media_type='application/pdf', filename='merged.pdf')
 
 @app.post("/compress")
 async def compress_pdf(file: UploadFile = File(...)):
