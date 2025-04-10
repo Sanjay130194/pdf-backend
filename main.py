@@ -18,7 +18,7 @@ app.add_middleware(
 )
 
 @app.post("/merge")
-async def merge(files: List[UploadFile] = File(...)):
+async def merge(files: list[UploadFile] = File(...)):
     merged = PdfWriter()
     for file in files:
         reader = PdfReader(file.file)
